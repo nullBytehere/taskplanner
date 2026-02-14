@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Planner Pro - With Brain Dump</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
+        body { font-family: 'Inter', sans-serif; }
         .header-bg { background-color: #4338ca; } 
         .modal { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
         .modal.active { opacity: 1; pointer-events: auto; }
@@ -25,14 +30,18 @@
         border-radius: 9999px !important;
         white-space: nowrap !important;
         }
-        /* Scrollbar hiding for cleaner look */
+        
+        .dark #totalTimeBadge {
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="min-h-screen relative pb-20">
+<body class="min-h-screen relative pb-20 bg-[#F3F4F6] dark:bg-gray-900 transition-colors duration-300">
 
-    <header class="header-bg text-white pb-12 pt-6 px-4 md:px-10 shadow-lg">
+    <header class="header-bg text-white pb-12 pt-6 px-4 md:px-10 shadow-lg transition-colors duration-300">
         <div class="max-w-6xl mx-auto flex justify-between items-start">
             <div>
                 <h2 id="greetingText" class="text-sm md:text-lg font-medium opacity-90">Good Morning</h2>
@@ -40,10 +49,13 @@
             </div>
             
             <div class="flex gap-2">
+                <button onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle Dark Mode" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
+                    <i class="fas fa-moon" id="darkModeIcon"></i>
+                </button>
                 <button onclick="openModal('nameModal')" title="Edit Name" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
                     <i class="fas fa-user-edit"></i>
                 </button>
-                <button onclick="resetAllData()" title="Reset All" class="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition">
+                <button onclick="openModal('deleteAllModal')" title="Delete Options" class="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition">
                     <i class="fas fa-trash-alt"></i>
                 </button>
                 <button onclick="saveAsImage()" title="Save as Image" class="bg-green-500 hover:bg-green-600 p-2 rounded-lg transition">
@@ -55,30 +67,16 @@
 
     <main class="max-w-6xl mx-auto px-4 -mt-8">
         
-        <button onclick="openTaskModalForAdd()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-4 rounded-xl shadow-lg text-lg transition transform active:scale-95 flex items-center justify-center gap-2 uppercase mb-6">
+        <button onclick="openTaskModalForAdd()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-4 rounded-xl shadow-lg text-lg transition transform active:scale-95 flex items-center justify-center gap-2 uppercase mb-6 border-2 border-yellow-500 dark:border-yellow-600">
             <i class="fas fa-plus-circle"></i> Add New Task schedule 
         </button>
 
-        <div id="fullCaptureArea" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="fullCaptureArea" class="grid grid-cols-1 md:grid-cols-[40%_60%] gap-6 bg-transparent">
             
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
-                <div class="flex justify-between items-center mb-6 px-1 border-b pb-4 border-gray-100">
-                    <h3 class="text-xl font-black text-gray-800 uppercase tracking-tight">Task schedule list</h3>
-                    <span id="totalTimeBadge">Total: 0h 0m</span>
-                </div>
-
-                <div id="taskList" class="space-y-3"></div>
-
-                <div id="emptyState" class="hidden text-center py-12 opacity-50">
-                    <i class="fas fa-tasks text-4xl mb-3 text-gray-300"></i>
-                    <p class="text-gray-500 font-medium">Your schedule is empty</p>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
-                <div class="flex justify-between items-center mb-6 px-1 border-b pb-4 border-gray-100">
-                    <h3 class="text-xl font-black text-gray-800 uppercase tracking-tight text-indigo-900">Task List</h3>
-                    <button onclick="openModal('brainDumpModal')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-1.5 rounded-full text-[14px] font-bold transition">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6 px-1 border-b pb-4 border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight text-indigo-900">Task List</h3>
+                    <button onclick="openBrainDumpModalForAdd()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 px-4 py-1.5 rounded-full text-[14px] font-bold transition">
                         <i class="fas fa-plus mr-1"></i> Add Task
                     </button>
                 </div>
@@ -86,31 +84,46 @@
                 <div id="brainDumpList" class="space-y-3 flex-1 overflow-y-auto max-h-[500px] no-scrollbar"></div>
 
                 <div id="brainDumpEmpty" class="hidden text-center py-12 opacity-50">
-                    <i class="fas fa-brain text-4xl mb-3 text-gray-300"></i>
-                    <p class="text-gray-500 font-medium">No task yet</p>
+                    <i class="fas fa-brain text-4xl mb-3 text-gray-300 dark:text-gray-600"></i>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium">No task yet</p>
+                </div>
+            </div>
+
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-full transition-colors duration-300">
+                <div class="flex justify-between items-center mb-6 px-1 border-b pb-4 border-gray-100 dark:border-gray-700">
+                    <h3 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Task schedule list</h3>
+                    <span id="totalTimeBadge">Total: 0h 0m</span>
+                </div>
+
+                <div id="taskList" class="space-y-3"></div>
+
+                <div id="emptyState" class="hidden text-center py-12 opacity-50">
+                    <i class="fas fa-tasks text-4xl mb-3 text-gray-300 dark:text-gray-600"></i>
+                    <p class="text-gray-500 dark:text-gray-400 font-medium">Your schedule is empty</p>
                 </div>
             </div>
 
         </div>
         
-        <p class="text-[9px] text-gray-400 mt-6 text-center italic tracking-widest uppercase">My Day Planner Dashboard</p>
+        <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-6 text-center italic tracking-widest uppercase">Day Planner Dashboard By Shishir - All data save in your browser</p>
     </main>
 
     <div id="nameModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Identity</h2>
-            <input type="text" id="userNameInput" placeholder="Enter Name" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl mb-4 focus:border-indigo-500 outline-none text-center font-bold">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-8 shadow-2xl transition-colors duration-300">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-center">Your Name ?</h2>
+            <input type="text" id="userNameInput" placeholder="Enter Name" class="w-full p-4 bg-gray-50 dark:bg-gray-700 dark:text-white border-2 border-gray-100 dark:border-gray-600 rounded-2xl mb-4 focus:border-indigo-500 outline-none text-center font-bold placeholder-gray-400">
             <div class="flex gap-3">
-                <button onclick="closeModal('nameModal')" class="flex-1 bg-gray-100 py-3 rounded-xl font-bold text-gray-500">Cancel</button>
-                <button onclick="saveUserName()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">Update</button>
+                <button onclick="closeModal('nameModal')" class="flex-1 bg-gray-100 dark:bg-gray-700 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
+                <button onclick="saveUserName()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">Update</button>
             </div>
         </div>
     </div>
 
     <div id="taskModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h2 id="taskModalTitle" class="text-lg font-black text-gray-800 uppercase">New Activity</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md p-6 shadow-2xl transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                <h2 id="taskModalTitle" class="text-lg font-black text-gray-800 dark:text-white uppercase">New Activity</h2>
                 <button onclick="closeModal('taskModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
             </div>
             
@@ -118,16 +131,16 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Task Title</label>
-                    <input type="text" id="taskName" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50 outline-none focus:border-indigo-400 font-medium">
+                    <input type="text" id="taskName" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none focus:border-indigo-400 font-medium">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase ml-1">From</label>
-                        <input type="time" id="startTime" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50">
+                        <input type="time" id="startTime" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase ml-1">To</label>
-                        <input type="time" id="endTime" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50">
+                        <input type="time" id="endTime" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
                     </div>
                 </div>
                 <button id="taskSubmitBtn" onclick="handleTaskSubmit()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase tracking-widest">Confirm</button>
@@ -136,29 +149,87 @@
     </div>
 
     <div id="brainDumpModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h2 class="text-lg font-black text-gray-800 uppercase">Brain Dump</h2>
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md p-6 shadow-2xl transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                <h2 id="brainDumpTitle" class="text-lg font-black text-gray-800 dark:text-white uppercase">Brain Dump</h2>
                 <button onclick="closeModal('brainDumpModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
             </div>
+            
+            <input type="hidden" id="editBrainDumpId">
             
             <div class="space-y-4">
                 <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-1">What's on your mind?</label>
-                    <textarea id="brainDumpInput" rows="5" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50 outline-none focus:border-indigo-400 font-medium resize-none" placeholder="Type your task here..."></textarea>
+                    <textarea id="brainDumpInput" rows="5" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none focus:border-indigo-400 font-medium resize-none" placeholder="Type your task here..."></textarea>
                 </div>
-                <button onclick="handleBrainDumpSubmit()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase tracking-widest">Save Note</button>
+                <button id="brainDumpSubmitBtn" onclick="handleBrainDumpSubmit()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase tracking-widest">Add Task</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteAllModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                <h2 class="text-lg font-black text-gray-800 dark:text-white uppercase">Delete Options</h2>
+                <button onclick="closeModal('deleteAllModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="deleteTaskSchedule()" class="w-full flex items-center justify-center gap-2 bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-yellow-600 transition text-sm">
+                    <i class="fas fa-calendar-times"></i> Delete Task Schedule List
+                </button>
+                <button onclick="deleteBrainDumpList()" class="w-full flex items-center justify-center gap-2 bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-indigo-600 transition text-sm">
+                    <i class="fas fa-list-ul"></i> Delete Task List
+                </button>
+                <button onclick="deleteAllData()" class="w-full flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-700 transition text-sm">
+                    <i class="fas fa-trash-alt"></i> Delete All
+                </button>
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            initDarkMode();
             loadUserName();
             updateGreeting();
             renderTasks();
             renderBrainDump();
         });
+
+        // --- Dark Mode Logic ---
+        function initDarkMode() {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                updateIcon(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateIcon(false);
+            }
+        }
+
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+                updateIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+                updateIcon(true);
+            }
+        }
+
+        function updateIcon(isDark) {
+            const icon = document.getElementById('darkModeIcon');
+            if (isDark) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
 
         // --- Core Functions ---
         function updateGreeting() {
@@ -183,31 +254,52 @@
             }
         }
 
-        function resetAllData() {
-            if (confirm("Are you sure you want to delete ALL tasks and notes?")) {
+        // --- NEW Delete Functions ---
+        function deleteTaskSchedule() {
+            if (confirm("Are you sure you want to delete ALL Task Schedules?")) {
+                localStorage.removeItem('myTasks');
+                renderTasks();
+                closeModal('deleteAllModal');
+            }
+        }
+
+        function deleteBrainDumpList() {
+            if (confirm("Are you sure you want to delete ALL Task List items?")) {
+                localStorage.removeItem('myBrainDump');
+                renderBrainDump();
+                closeModal('deleteAllModal');
+            }
+        }
+
+        function deleteAllData() {
+            if (confirm("Are you sure you want to delete ALL data?")) {
                 localStorage.removeItem('myTasks');
                 localStorage.removeItem('myBrainDump');
                 renderTasks();
                 renderBrainDump();
+                closeModal('deleteAllModal');
             }
         }
 
-        function saveAsImage() 
-        {
-        html2canvas(document.getElementById('fullCaptureArea'), { 
-        backgroundColor: "#ffffff", 
-        scale: 3, // হাই কোয়ালিটির জন্য
-        useCORS: true,
-        logging: false
-        }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `Task_Plan-${Date.now()}.png`;
-        link.href = canvas.toDataURL("image/png", 1.0);
-        link.click();
-        });
-}
+        function saveAsImage() {
+            const element = document.getElementById('fullCaptureArea');
+            const isDark = document.documentElement.classList.contains('dark');
+            const bgColor = isDark ? "#1f2937" : "#ffffff";
 
-        // --- Task Functions ---
+            html2canvas(element, { 
+                backgroundColor: bgColor, 
+                scale: 3, 
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Task_Plan-${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+            });
+        }
+
+        // --- Task Schedule Functions ---
         function openTaskModalForAdd() {
             document.getElementById('taskModalTitle').innerText = "New Activity";
             document.getElementById('taskSubmitBtn').innerText = "Confirm Add";
@@ -274,9 +366,14 @@
             else {
                 emptyState.classList.add('hidden');
                 tasks.forEach(task => {
+                    // Calculate total and individual duration
                     let diff = (new Date(`2000-01-01T${task.end}`) - new Date(`2000-01-01T${task.start}`)) / 60000;
                     if (diff < 0) diff += 1440;
                     totalMins += diff;
+                    
+                    let hrs = Math.floor(diff / 60);
+                    let mns = diff % 60;
+                    let durationStr = hrs > 0 ? `${hrs}h ${mns}m` : `${mns}m`;
                     
                     const format = (t) => {
                         let [h, m] = t.split(':');
@@ -284,16 +381,17 @@
                     };
 
                     container.innerHTML += `
-                        <div class="p-4 rounded-2xl flex justify-between items-center shadow-sm mb-3 border border-indigo-100 bg-white">
+                        <div class="p-4 rounded-2xl flex justify-between items-center shadow-sm mb-3 border border-indigo-100 bg-white dark:bg-gray-700 dark:border-gray-600 transition-colors">
                             <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[12px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">${format(task.start)} - ${format(task.end)}</span>
+                                <div class="flex flex-wrap items-center gap-2 mb-1">
+                                    <span class="text-[12px] font-black text-indigo-600 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/50 px-2 py-0.5 rounded uppercase">${format(task.start)} - ${format(task.end)}</span>
+                                    <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-600 px-2 py-0.5 rounded"><i class="far fa-clock mr-1"></i>${durationStr}</span>
                                 </div>
-                                <h4 class="font-bold text-gray-800 text-sm md:text-base">${task.name}</h4>
+                                <h4 class="font-bold text-gray-800 dark:text-white text-sm md:text-base">${task.name}</h4>
                             </div>
                             <div class="flex items-center gap-3">
                                 <button onclick="openTaskModalForEdit(${task.id})" class="text-indigo-300 hover:text-indigo-600 transition"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteTask(${task.id})" class="text-gray-200 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
+                                <button onclick="deleteTask(${task.id})" class="text-red-200 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </div>`;
                 });
@@ -301,16 +399,43 @@
             document.getElementById('totalTimeBadge').innerText = `Total: ${Math.floor(totalMins/60)}h ${totalMins%60}m`;
         }
 
-        // --- Brain Dump Functions (NEW) ---
+        // --- Brain Dump Functions ---
+        function openBrainDumpModalForAdd() {
+            document.getElementById('brainDumpTitle').innerText = "Brain Dump";
+            document.getElementById('brainDumpSubmitBtn').innerText = "Add Task";
+            document.getElementById('editBrainDumpId').value = "";
+            document.getElementById('brainDumpInput').value = "";
+            openModal('brainDumpModal');
+        }
+
+        function openBrainDumpModalForEdit(id) {
+            const dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
+            const dump = dumps.find(d => d.id === id);
+            
+            if (dump) {
+                document.getElementById('brainDumpTitle').innerText = "Edit Note";
+                document.getElementById('brainDumpSubmitBtn').innerText = "Update Task";
+                document.getElementById('editBrainDumpId').value = id; 
+                document.getElementById('brainDumpInput').value = dump.text; 
+                openModal('brainDumpModal');
+            }
+        }
+
         function handleBrainDumpSubmit() {
             const text = document.getElementById('brainDumpInput').value.trim();
+            const editId = document.getElementById('editBrainDumpId').value;
+
             if (!text) return alert("Please write something");
 
             let dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
-            dumps.push({ id: Date.now(), text: text, date: new Date().toLocaleDateString() });
+
+            if (editId) {
+                dumps = dumps.map(d => d.id == editId ? { ...d, text: text } : d);
+            } else {
+                dumps.push({ id: Date.now(), text: text, date: new Date().toLocaleDateString() });
+            }
             
             localStorage.setItem('myBrainDump', JSON.stringify(dumps));
-            document.getElementById('brainDumpInput').value = ""; // Clear input
             closeModal('brainDumpModal');
             renderBrainDump();
         }
@@ -324,18 +449,22 @@
             if (dumps.length === 0) emptyState.classList.remove('hidden');
             else {
                 emptyState.classList.add('hidden');
-                dumps.reverse().forEach(dump => { // Show newest first
-                    // Replacing newlines with <br> for display formatting
+                dumps.reverse().forEach(dump => { 
                     const formattedText = dump.text.replace(/\n/g, '<br>');
                     
                     container.innerHTML += `
-                        <div class="p-4 rounded-2xl shadow-sm mb-3 bg-yellow-50 border border-yellow-100 relative group">
-                            <p class="text-sm text-gray-800 font-medium leading-relaxed">${formattedText}</p>
+                        <div class="p-4 rounded-2xl shadow-sm mb-3 bg-yellow-50 border border-yellow-100 dark:bg-yellow-900/20 dark:border-yellow-700/30 relative group transition-colors">
+                            <p class="text-[12.5] text-gray-800 dark:text-gray-200 font-medium leading-relaxed">${formattedText}</p>
                             <div class="mt-2 flex justify-between items-center">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase">${dump.date}</span>
-                                <button onclick="deleteBrainDump(${dump.id})" class="text-red-200 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
+                                <span class="text-[11px] text-gray-400 dark:text-gray-500 font-bold uppercase">${dump.date}</span>
+                                <div class="transition flex gap-3">
+                                    <button onclick="openBrainDumpModalForEdit(${dump.id})" class="text-indigo-300 hover:text-indigo-600 transition">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteBrainDump(${dump.id})" class="text-red-200 hover:text-red-500 transition">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>`;
                 });
@@ -343,7 +472,7 @@
         }
 
         function deleteBrainDump(id) {
-            if(confirm("Delete this note?")) {
+            if(confirm("Delete this task?")) {
                 let dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
                 dumps = dumps.filter(d => d.id !== id);
                 localStorage.setItem('myBrainDump', JSON.stringify(dumps));
