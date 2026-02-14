@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Planner Pro - Shishir Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F3F4F6; }
+        .header-bg { background-color: #4338ca; } 
+        .modal { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+        .modal.active { opacity: 1; pointer-events: auto; }
+        
+        #totalTimeBadge {
+            background-color: #4338ca !important;
+            color: #ffffff !important;
+            display: inline-block !important;
+            padding: 5px 15px !important;
+            border-radius: 9999px !important;
+        }
+        .task-card-fixed {
+            background-color: #ffffff !important;
+            border-left: 4px solid #4338ca !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative pb-20">
+
+    <header class="header-bg text-white pb-12 pt-6 px-4 md:px-10 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-between items-start">
+            <div>
+                <h2 id="greetingText" class="text-sm md:text-lg font-medium opacity-90">Good Morning</h2>
+                <h1 id="headerName" class="text-2xl md:text-3xl font-bold tracking-wide mt-1 capitalize">User</h1>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="openModal('nameModal')" title="Edit Name" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
+                    <i class="fas fa-user-edit"></i>
+                </button>
+                <button onclick="resetAllTasks()" title="Reset Tasks" class="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button onclick="saveAsImage()" title="Save as Image" class="bg-green-500 hover:bg-green-600 p-2 rounded-lg transition">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 -mt-8">
+        
+        <button onclick="openTaskModalForAdd()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-extrabold py-4 rounded-xl shadow-lg text-lg transition transform active:scale-95 flex items-center justify-center gap-2 uppercase">
+            <i class="fas fa-plus-circle"></i> Add New Task
+        </button>
+
+        <div id="captureArea" class="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100" style="background-color: #ffffff !important;">
+            <div class="flex justify-between items-center mb-6 px-1">
+                <h3 class="text-xl font-black text-gray-800 uppercase tracking-tight">Today Plan</h3>
+                <span id="totalTimeBadge">Total: 0h 0m</span>
+            </div>
+
+            <div id="taskList" class="space-y-3"></div>
+
+            <div id="emptyState" class="hidden text-center py-12 opacity-50">
+                <i class="fas fa-tasks text-4xl mb-3 text-gray-300"></i>
+                <p class="text-gray-500 font-medium">Your schedule is empty</p>
+            </div>
+            <p class="text-[9px] text-gray-300 mt-6 text-center italic tracking-widest uppercase">My Day Planner Dashboard</p>
+        </div>
+    </main>
+
+    <div id="nameModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Identity</h2>
+            <input type="text" id="userNameInput" placeholder="Enter Name" class="w-full p-4 bg-gray-50 border-2 border-gray-100 rounded-2xl mb-4 focus:border-indigo-500 outline-none text-center font-bold">
+            <div class="flex gap-3">
+                <button onclick="closeModal('nameModal')" class="flex-1 bg-gray-100 py-3 rounded-xl font-bold text-gray-500">Cancel</button>
+                <button onclick="saveUserName()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="taskModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 id="taskModalTitle" class="text-lg font-black text-gray-800 uppercase">New Activity</h2>
+                <button onclick="closeModal('taskModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editTaskId">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Task Title</label>
+                    <input type="text" id="taskName" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50 outline-none focus:border-indigo-400 font-medium">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">From</label>
+                        <input type="time" id="startTime" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">To</label>
+                        <input type="time" id="endTime" class="w-full p-4 mt-1 border-2 border-gray-50 rounded-2xl bg-gray-50">
+                    </div>
+                </div>
+                <button id="taskSubmitBtn" onclick="handleTaskSubmit()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-indigo-700 transition uppercase tracking-widest">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserName();
+            updateGreeting();
+            renderTasks();
+        });
+
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            const textElem = document.getElementById('greetingText');
+            let greeting = (hour < 12) ? "Good Morning" : (hour < 17) ? "Good Afternoon" : (hour < 21) ? "Good Evening" : "Good Night";
+            textElem.innerText = greeting;
+        }
+
+        function loadUserName() {
+            const name = localStorage.getItem('plannerUserName');
+            if (!name) openModal('nameModal');
+            else document.getElementById('headerName').innerText = name;
+        }
+
+        function saveUserName() {
+            const name = document.getElementById('userNameInput').value.trim();
+            if (name) {
+                localStorage.setItem('plannerUserName', name);
+                document.getElementById('headerName').innerText = name;
+                closeModal('nameModal');
+            }
+        }
+
+        // Modal Functions for Task
+        function openTaskModalForAdd() {
+            document.getElementById('taskModalTitle').innerText = "New Activity";
+            document.getElementById('taskSubmitBtn').innerText = "Confirm Add";
+            document.getElementById('editTaskId').value = "";
+            document.getElementById('taskName').value = "";
+            document.getElementById('startTime').value = "";
+            document.getElementById('endTime').value = "";
+            openModal('taskModal');
+        }
+
+        function openTaskModalForEdit(id) {
+            const tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                document.getElementById('taskModalTitle').innerText = "Edit Activity";
+                document.getElementById('taskSubmitBtn').innerText = "Update Task";
+                document.getElementById('editTaskId').value = id;
+                document.getElementById('taskName').value = task.name;
+                document.getElementById('startTime').value = task.start;
+                document.getElementById('endTime').value = task.end;
+                openModal('taskModal');
+            }
+        }
+
+        function handleTaskSubmit() {
+            const name = document.getElementById('taskName').value;
+            const start = document.getElementById('startTime').value;
+            const end = document.getElementById('endTime').value;
+            const editId = document.getElementById('editTaskId').value;
+
+            if (!name || !start || !end) return alert("Fill all fields");
+
+            let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+
+            if (editId) {
+                // Edit existing
+                tasks = tasks.map(t => t.id == editId ? { ...t, name, start, end } : t);
+            } else {
+                // Add new
+                tasks.push({ id: Date.now(), name, start, end });
+            }
+
+            tasks.sort((a, b) => a.start.localeCompare(b.start));
+            localStorage.setItem('myTasks', JSON.stringify(tasks));
+            closeModal('taskModal');
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            if(confirm("Delete this task?")) {
+                let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+                tasks = tasks.filter(t => t.id !== id);
+                localStorage.setItem('myTasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+        }
+
+        function resetAllTasks() {
+            if (confirm("Delete all tasks?")) {
+                localStorage.removeItem('myTasks');
+                renderTasks();
+            }
+        }
+
+        function saveAsImage() {
+            html2canvas(document.getElementById('captureArea'), { backgroundColor: "#ffffff", scale: 3, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Plan-${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+            });
+        }
+
+        function renderTasks() {
+            const tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+            const container = document.getElementById('taskList');
+            const emptyState = document.getElementById('emptyState');
+            container.innerHTML = '';
+            let totalMins = 0;
+
+            if (tasks.length === 0) emptyState.classList.remove('hidden');
+            else {
+                emptyState.classList.add('hidden');
+                tasks.forEach(task => {
+                    let diff = (new Date(`2000-01-01T${task.end}`) - new Date(`2000-01-01T${task.start}`)) / 60000;
+                    if (diff < 0) diff += 1440;
+                    totalMins += diff;
+                    
+                    const format = (t) => {
+                        let [h, m] = t.split(':');
+                        return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`;
+                    };
+
+                    container.innerHTML += `
+                        <div class=" p-4 rounded-2xl flex justify-between items-center shadow-sm mb-3" style="border: 1px solid #898ce3;background-color: #ffffff !important;">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[13.5px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">${format(task.start)} - ${format(task.end)}</span>
+                                    <span class="text-[13.5px] text-gray-600 font-bold tracking-widest">• ${Math.floor(diff/60)}H ${diff%60}M</span>
+                                </div>
+                                <h4 class="font-bold text-gray-800 text-sm md:text-base">${task.name}</h4>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="openTaskModalForEdit(${task.id})" class="text-indigo-300 hover:text-indigo-600 transition"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteTask(${task.id})" class="text-gray-200 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>`;
+                });
+            }
+            document.getElementById('totalTimeBadge').innerText = `Total: ${Math.floor(totalMins/60)}h ${totalMins%60}m`;
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    </script>
+</body>
+</html>
