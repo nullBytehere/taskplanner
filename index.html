@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Planner Pro - With Brain Dump</title>
+    <title>Task Planner Pro - Smart Greetings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,6 +19,12 @@
         .modal { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
         .modal.active { opacity: 1; pointer-events: auto; }
         
+        /* Sidebar Transitions */
+        .sidebar { transition: transform 0.3s ease-in-out; transform: translateX(100%); }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
         #totalTimeBadge {
         background-color: #4338ca !important;
         color: #ffffff !important;
@@ -42,28 +48,84 @@
 <body class="min-h-screen relative pb-20 bg-[#F3F4F6] dark:bg-gray-900 transition-colors duration-300">
 
     <header class="header-bg text-white pb-12 pt-6 px-4 md:px-10 shadow-lg transition-colors duration-300">
-        <div class="max-w-6xl mx-auto flex justify-between items-start">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div>
-                <h2 id="greetingText" class="text-sm md:text-lg font-medium opacity-90">Good Morning</h2>
-                <h1 id="headerName" class="text-2xl md:text-3xl font-bold tracking-wide mt-1 capitalize">User</h1>
+                <h2 id="greetingText" class="text-sm md:text-lg font-medium opacity-90">🌅 Good Morning</h2>
+                <div class="flex items-center gap-3 mt-1 group">
+                    <h1 id="headerName" class="text-2xl md:text-3xl font-bold tracking-wide capitalize">Guest</h1>
+                    <button id="editNameBtn" onclick="openEditProfileModal()" class="hidden text-white/50 hover:text-white transition transform hover:scale-110" title="Edit Profile & PIN">
+                        <i class="fas fa-pen text-sm md:text-lg"></i>
+                    </button>
+                    <i id="lockStatusIcon" class="fas fa-lock text-yellow-300 text-lg hidden animate-pulse" title="Protected Profile"></i>
+                </div>
             </div>
             
-            <div class="flex gap-2">
-                <button onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle Dark Mode" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
-                    <i class="fas fa-moon" id="darkModeIcon"></i>
+            <div class="hidden md:flex gap-2">
+                <button onclick="toggleDarkMode()" id="darkModeBtnDesktop" title="Toggle Dark Mode" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
+                    <i class="fas fa-moon" id="darkModeIconDesktop"></i>
                 </button>
-                <button onclick="openModal('nameModal')" title="Edit Name" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
-                    <i class="fas fa-user-edit"></i>
+                <button onclick="openUserModal()" title="Switch User" class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition">
+                    <i class="fas fa-users"></i>
                 </button>
                 <button onclick="openModal('deleteAllModal')" title="Delete Options" class="bg-red-500 hover:bg-red-600 p-2 rounded-lg transition">
                     <i class="fas fa-trash-alt"></i>
                 </button>
-                <button onclick="saveAsImage()" title="Save as Image" class="bg-green-500 hover:bg-green-600 p-2 rounded-lg transition">
+
+                <button onclick="openModal('exportModal')" title="Export Data" class="bg-blue-500 hover:bg-blue-600 p-2 rounded-lg transition shadow-lg border border-blue-400">
+                    <i class="fas fa-file-export"></i>
+                </button>
+                <button onclick="openModal('importModal')" title="Import Data" class="bg-purple-500 hover:bg-purple-600 p-2 rounded-lg transition shadow-lg border border-purple-400">
+                    <i class="fas fa-file-import"></i>
+                </button>
+                <button onclick="saveAsImage()" title="Save as Image" class="bg-green-500 hover:bg-green-600 p-2 rounded-lg transition shadow-lg">
                     <i class="fas fa-camera"></i>
                 </button>
             </div>
+
+            <button onclick="toggleSidebar()" class="md:hidden text-white text-2xl focus:outline-none bg-white/10 p-2 rounded-lg">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </header>
+
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="sidebar-overlay fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"></div>
+    <div id="mobileSidebar" class="sidebar fixed top-0 right-0 h-full w-72 bg-white dark:bg-gray-800 shadow-2xl z-50 p-6 flex flex-col gap-4 overflow-y-auto">
+        <div class="flex justify-between items-center mb-4 border-b dark:border-gray-700 pb-4">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Menu</h3>
+            <button onclick="toggleSidebar()" class="text-gray-500 dark:text-gray-400 text-2xl hover:text-red-500 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <button onclick="toggleDarkMode(); toggleSidebar();" class="flex items-center gap-3 w-full text-left p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            <i class="fas fa-moon w-6" id="darkModeIconMobile"></i> Dark Mode
+        </button>
+        
+        <button onclick="openUserModal(); toggleSidebar();" class="flex items-center gap-3 w-full text-left p-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            <i class="fas fa-users w-6 text-indigo-500"></i> Switch User
+        </button>
+
+        <div class="h-px bg-gray-200 dark:bg-gray-700 my-1"></div>
+
+        <button onclick="openModal('exportModal'); toggleSidebar();" class="flex items-center gap-3 w-full text-left p-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
+            <i class="fas fa-file-export w-6"></i> Export Data
+        </button>
+
+        <button onclick="openModal('importModal'); toggleSidebar();" class="flex items-center gap-3 w-full text-left p-3 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold hover:bg-purple-100 dark:hover:bg-purple-900/50 transition">
+            <i class="fas fa-file-import w-6"></i> Import Data
+        </button>
+
+        <button onclick="saveAsImage(); toggleSidebar();" class="flex items-center gap-3 w-full text-left p-3 rounded-xl bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 font-bold hover:bg-green-100 dark:hover:bg-green-900/50 transition">
+            <i class="fas fa-camera w-6"></i> Save Image
+        </button>
+
+        <div class="mt-auto">
+            <button onclick="openModal('deleteAllModal'); toggleSidebar();" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition">
+                <i class="fas fa-trash-alt"></i> Delete Options
+            </button>
+        </div>
+    </div>
+
 
     <main class="max-w-6xl mx-auto px-4 -mt-8">
         
@@ -111,27 +173,95 @@
 
     <div id="nameModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-8 shadow-2xl transition-colors duration-300">
-            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-6 text-center">Your Name ?</h2>
-            <input type="text" id="userNameInput" placeholder="Enter Name" class="w-full p-4 bg-gray-50 dark:bg-gray-700 dark:text-white border-2 border-gray-100 dark:border-gray-600 rounded-2xl mb-4 focus:border-indigo-500 outline-none text-center font-bold placeholder-gray-400">
-            <div class="flex gap-3">
-                <button onclick="closeModal('nameModal')" class="flex-1 bg-gray-100 dark:bg-gray-700 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600">Cancel</button>
-                <button onclick="saveUserName()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700">Update</button>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Switch Account</h2>
+            
+            <div id="existingUsersList" class="space-y-2 mb-6 max-h-[200px] overflow-y-auto no-scrollbar"></div>
+
+            <div class="border-t border-gray-200 dark:border-gray-600 pt-5">
+                <p class="text-xs text-gray-400 text-center mb-3 font-bold uppercase tracking-wide">Or Create New Profile</p>
+                <div class="space-y-2">
+                    <input type="text" id="newUserNameInput" placeholder="Enter Name" class="w-full p-3 bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm font-bold">
+                    <div class="flex gap-2">
+                        <input type="text" id="newUserPin" placeholder="Set PIN (Optional)" maxlength="4" class="flex-1 p-3 bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm font-bold" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+                        <button onclick="createNewUser()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 rounded-xl font-bold transition">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('nameModal')" class="w-full mt-4 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 font-bold py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Close</button>
+        </div>
+    </div>
+
+    <div id="pinEntryModal" class="modal fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-xs p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                <i class="fas fa-lock text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">Locked Profile</h3>
+            <p class="text-xs text-gray-400 mb-4">Enter PIN to access <span id="pinTargetUser" class="font-bold text-indigo-500"></span></p>
+            
+            <input type="password" id="pinInput" maxlength="4" class="w-full p-4 text-center text-2xl tracking-[0.5em] font-bold bg-gray-50 dark:bg-gray-700 dark:text-white border-2 border-indigo-100 dark:border-gray-600 rounded-2xl mb-4 focus:border-indigo-500 outline-none" placeholder="....">
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeModal('pinEntryModal')" class="bg-gray-100 dark:bg-gray-700 text-gray-500 font-bold py-3 rounded-xl hover:bg-gray-200">Cancel</button>
+                <button onclick="verifyPin()" class="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700">Unlock</button>
             </div>
         </div>
     </div>
 
+    <div id="editProfileModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-8 shadow-2xl transition-colors duration-300">
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-2 text-center">Profile Settings</h2>
+            <p class="text-xs text-gray-400 text-center mb-6">Manage Name and Security</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Profile Name</label>
+                    <input type="text" id="editProfileName" class="w-full p-3 bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm font-bold">
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Change/Set PIN</label>
+                    <input type="text" id="editProfilePin" maxlength="4" placeholder="Enter New PIN" class="w-full p-3 bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl outline-none text-sm font-bold" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4)">
+                    <p class="text-[10px] text-gray-400 mt-1 italic">Leave empty to keep current PIN.</p>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button id="removePinBtn" onclick="removeCurrentPin()" class="hidden flex-1 bg-red-100 text-red-500 font-bold py-3 rounded-xl hover:bg-red-200 transition text-sm">
+                        Remove Lock
+                    </button>
+                    <button onclick="saveProfileChanges()" class="flex-[2] bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition text-sm shadow-lg">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+            
+            <button onclick="closeModal('editProfileModal')" class="w-full mt-4 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 font-bold py-3 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+        </div>
+    </div>
+
+
     <div id="taskModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md p-6 shadow-2xl transition-colors duration-300">
             <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
-                <h2 id="taskModalTitle" class="text-lg font-black text-gray-800 dark:text-white uppercase">New Activity</h2>
+                <h2 id="taskModalTitle" class="text-lg font-black text-gray-800 dark:text-white uppercase">Set Task Schedule</h2>
                 <button onclick="closeModal('taskModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
             </div>
             
             <input type="hidden" id="editTaskId">
             <div class="space-y-4">
                 <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Select from Task List (Optional)</label>
+                    <select id="taskSelector" onchange="fillTaskName()" class="w-full p-3 mt-1 border-2 border-gray-100 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none text-sm text-gray-500 dark:text-gray-300 font-bold cursor-pointer">
+                        <option value="">-- Choose from List --</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Task Title</label>
-                    <input type="text" id="taskName" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none focus:border-indigo-400 font-medium">
+                    <input type="text" id="taskName" class="w-full p-4 mt-1 border-2 border-gray-50 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-700 dark:text-white outline-none focus:border-indigo-400 font-medium" placeholder="Or type manually here...">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -173,7 +303,7 @@
                 <h2 class="text-lg font-black text-gray-800 dark:text-white uppercase">Delete Options</h2>
                 <button onclick="closeModal('deleteAllModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
             </div>
-            
+            <p class="text-xs text-red-500 mb-4 text-center font-bold">Warning: This will delete data for the current user only.</p>
             <div class="space-y-3">
                 <button onclick="deleteTaskSchedule()" class="w-full flex items-center justify-center gap-2 bg-yellow-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-yellow-600 transition text-sm">
                     <i class="fas fa-calendar-times"></i> Delete Task Schedule List
@@ -182,29 +312,437 @@
                     <i class="fas fa-list-ul"></i> Delete Task List
                 </button>
                 <button onclick="deleteAllData()" class="w-full flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-700 transition text-sm">
-                    <i class="fas fa-trash-alt"></i> Delete All
+                    <i class="fas fa-trash-alt"></i> Delete All (Current User)
                 </button>
             </div>
         </div>
     </div>
 
+    <div id="exportModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                <h2 class="text-lg font-black text-gray-800 dark:text-white uppercase">Export Data</h2>
+                <button onclick="closeModal('exportModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="exportData('txt')" class="flex flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-file-alt text-2xl text-blue-500"></i> TEXT File
+                </button>
+                <button onclick="exportData('json')" class="flex flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-file-code text-2xl text-yellow-500"></i> JSON File
+                </button>
+                <button onclick="exportData('md')" class="flex flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fab fa-markdown text-2xl text-black dark:text-white"></i> MarkDown
+                </button>
+                <button onclick="exportData('xml')" class="flex flex-col items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold py-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                    <i class="fas fa-file-code text-2xl text-orange-500"></i> XML File
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importModal" class="modal fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl transition-colors duration-300">
+            <div class="flex justify-between items-center mb-6 border-b dark:border-gray-700 pb-4">
+                <h2 class="text-lg font-black text-gray-800 dark:text-white uppercase">Import Data</h2>
+                <button onclick="closeModal('importModal')" class="text-gray-400 text-2xl hover:text-red-500">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl text-xs text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-info-circle mr-1"></i> 
+                    <b>Note:</b> Please use a valid <b>JSON</b> file exported from this app.
+                </div>
+                
+                <input type="file" id="importFile" accept=".json" class="w-full p-3 bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="importData('merge')" class="flex flex-col items-center justify-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow-md transition text-xs uppercase tracking-wide">
+                        <i class="fas fa-plus-circle mb-1 text-lg"></i> Merge<br><span class="opacity-70 normal-case font-medium">(Keep Old)</span>
+                    </button>
+                    <button onclick="importData('replace')" class="flex flex-col items-center justify-center bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl shadow-md transition text-xs uppercase tracking-wide">
+                        <i class="fas fa-sync-alt mb-1 text-lg"></i> Replace<br><span class="opacity-70 normal-case font-medium">(Delete Old)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- MULTI-USER STORAGE HANDLER ---
+        const UserHandler = {
+            getAllUsers: () => {
+                return JSON.parse(localStorage.getItem('plannerUsers')) || [];
+            },
+            getConfigs: () => {
+                return JSON.parse(localStorage.getItem('plannerProfileConfigs')) || {};
+            },
+            saveConfigs: (configs) => {
+                localStorage.setItem('plannerProfileConfigs', JSON.stringify(configs));
+            },
+            addUser: (name, pin = null) => {
+                const users = UserHandler.getAllUsers();
+                if (!users.includes(name)) {
+                    users.push(name);
+                    localStorage.setItem('plannerUsers', JSON.stringify(users));
+                }
+                
+                if (pin) {
+                    UserHandler.setPin(name, pin);
+                }
+            },
+            setPin: (name, pin) => {
+                const configs = UserHandler.getConfigs();
+                if (!configs[name]) configs[name] = {};
+                configs[name].pin = pin;
+                UserHandler.saveConfigs(configs);
+            },
+            removePin: (name) => {
+                const configs = UserHandler.getConfigs();
+                if (configs[name]) {
+                    delete configs[name].pin;
+                    UserHandler.saveConfigs(configs);
+                }
+            },
+            removeUser: (name) => {
+                let users = UserHandler.getAllUsers();
+                users = users.filter(u => u !== name);
+                localStorage.setItem('plannerUsers', JSON.stringify(users));
+                
+                const configs = UserHandler.getConfigs();
+                delete configs[name];
+                UserHandler.saveConfigs(configs);
+            },
+            renameUser: (oldName, newName) => {
+                const users = UserHandler.getAllUsers();
+                if (users.includes(newName)) return false; 
+
+                const index = users.indexOf(oldName);
+                if (index > -1) {
+                    users[index] = newName;
+                    localStorage.setItem('plannerUsers', JSON.stringify(users));
+                }
+
+                const configs = UserHandler.getConfigs();
+                if (configs[oldName]) {
+                    configs[newName] = configs[oldName];
+                    delete configs[oldName];
+                    UserHandler.saveConfigs(configs);
+                }
+
+                const oldTaskKey = DataHandler.getUserKeyForName(oldName, 'tasks');
+                const oldDumpKey = DataHandler.getUserKeyForName(oldName, 'dumps');
+                const newTaskKey = DataHandler.getUserKeyForName(newName, 'tasks');
+                const newDumpKey = DataHandler.getUserKeyForName(newName, 'dumps');
+
+                const tasks = localStorage.getItem(oldTaskKey);
+                const dumps = localStorage.getItem(oldDumpKey);
+
+                if(tasks) localStorage.setItem(newTaskKey, tasks);
+                if(dumps) localStorage.setItem(newDumpKey, dumps);
+
+                localStorage.removeItem(oldTaskKey);
+                localStorage.removeItem(oldDumpKey);
+
+                return true;
+            },
+            checkPin: (name, inputPin) => {
+                const configs = UserHandler.getConfigs();
+                if (!configs[name] || !configs[name].pin) return true; // No PIN set
+                return configs[name].pin === inputPin;
+            },
+            hasPin: (name) => {
+                const configs = UserHandler.getConfigs();
+                return configs[name] && configs[name].pin;
+            }
+        };
+
+        const DataHandler = {
+            getUserKey: (type) => {
+                let user = localStorage.getItem('plannerUserName') || 'Guest';
+                user = user.trim().replace(/\s+/g, '');
+                return `${user}_${type}`;
+            },
+            getUserKeyForName: (name, type) => {
+                const cleanName = name.trim().replace(/\s+/g, '');
+                return `${cleanName}_${type}`;
+            },
+            getTasks: () => {
+                const key = DataHandler.getUserKey('tasks');
+                const raw = JSON.parse(localStorage.getItem(key)) || [];
+                return raw.map(t => { if (t.name) return t; return { id: t.i, name: t.n, start: t.s, end: t.e }; });
+            },
+            saveTasks: (tasks) => {
+                const key = DataHandler.getUserKey('tasks');
+                const compressed = tasks.map(t => ({ i: t.id, n: t.name, s: t.start, e: t.end }));
+                localStorage.setItem(key, JSON.stringify(compressed));
+            },
+            getDumps: () => {
+                const key = DataHandler.getUserKey('dumps');
+                const raw = JSON.parse(localStorage.getItem(key)) || [];
+                return raw.map(d => { if (d.text) return d; return { id: d.i, text: d.t, date: new Date(d.i).toLocaleDateString() }; });
+            },
+            saveDumps: (dumps) => {
+                const key = DataHandler.getUserKey('dumps');
+                const compressed = dumps.map(d => ({ i: d.id, t: d.text }));
+                localStorage.setItem(key, JSON.stringify(compressed));
+            }
+        };
+
+        let pendingUserSwitch = null;
+
         document.addEventListener('DOMContentLoaded', () => {
             initDarkMode();
-            loadUserName();
+            checkCurrentUser();
             updateGreeting();
+        });
+
+        function checkCurrentUser() {
+            const name = localStorage.getItem('plannerUserName');
+            const editBtn = document.getElementById('editNameBtn');
+            const lockIcon = document.getElementById('lockStatusIcon');
+            
             renderTasks();
             renderBrainDump();
-        });
+
+            if (!name || name === 'Guest') {
+                document.getElementById('headerName').innerText = "Guest"; 
+                editBtn.classList.add('hidden'); 
+                lockIcon.classList.add('hidden');
+                if(!name) openUserModal();
+            } else {
+                document.getElementById('headerName').innerText = name;
+                editBtn.classList.remove('hidden'); 
+                
+                if(UserHandler.hasPin(name)) {
+                    lockIcon.classList.remove('hidden');
+                } else {
+                    lockIcon.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- User Modal Logic ---
+        function openUserModal() {
+            renderUserList();
+            openModal('nameModal');
+        }
+
+        function renderUserList() {
+            const users = UserHandler.getAllUsers();
+            const listContainer = document.getElementById('existingUsersList');
+            listContainer.innerHTML = '';
+
+            if (users.length === 0) {
+                listContainer.innerHTML = `<p class="text-center text-gray-400 text-xs italic py-2">No users saved yet.</p>`;
+            } else {
+                users.forEach(user => {
+                    const isLocked = UserHandler.hasPin(user);
+                    listContainer.innerHTML += `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl group hover:bg-indigo-50 dark:hover:bg-gray-600 transition cursor-pointer">
+                            <div onclick="attemptLogin('${user}')" class="flex-1 flex items-center gap-3">
+                                <div class="bg-indigo-100 dark:bg-indigo-900/50 w-8 h-8 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-300 font-bold text-xs relative">
+                                    ${user.charAt(0).toUpperCase()}
+                                    ${isLocked ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white flex items-center justify-center"><i class="fas fa-lock text-[6px] text-white"></i></div>' : ''}
+                                </div>
+                                <span class="font-bold text-gray-700 dark:text-gray-200">${user}</span>
+                            </div>
+                            <button onclick="deleteUserProfile('${user}')" class="text-gray-300 hover:text-red-500 px-2 transition" title="Delete Profile">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function createNewUser() {
+            const input = document.getElementById('newUserNameInput');
+            const pinInput = document.getElementById('newUserPin');
+            const name = input.value.trim();
+            const pin = pinInput.value.trim();
+
+            if(!name) return alert("Please enter a name");
+            
+            UserHandler.addUser(name, pin);
+            switchUser(name);
+        }
+
+        // --- LOGIN & SECURITY ---
+        function attemptLogin(name) {
+            if (UserHandler.hasPin(name)) {
+                pendingUserSwitch = name;
+                document.getElementById('pinTargetUser').innerText = name;
+                document.getElementById('pinInput').value = '';
+                openModal('pinEntryModal');
+                document.getElementById('pinInput').focus();
+            } else {
+                switchUser(name);
+            }
+        }
+
+        function verifyPin() {
+            const pin = document.getElementById('pinInput').value;
+            if (UserHandler.checkPin(pendingUserSwitch, pin)) {
+                closeModal('pinEntryModal');
+                switchUser(pendingUserSwitch);
+                pendingUserSwitch = null;
+            } else {
+                alert("Incorrect PIN!");
+                document.getElementById('pinInput').value = '';
+            }
+        }
+
+        // --- EDIT PROFILE LOGIC ---
+        function openEditProfileModal() {
+            const current = localStorage.getItem('plannerUserName');
+            if(!current || current === 'Guest') return;
+
+            document.getElementById('editProfileName').value = current;
+            document.getElementById('editProfilePin').value = ''; // Don't show old pin for security
+            
+            const removeBtn = document.getElementById('removePinBtn');
+            if(UserHandler.hasPin(current)) {
+                removeBtn.classList.remove('hidden');
+                removeBtn.classList.add('block');
+            } else {
+                removeBtn.classList.add('hidden');
+                removeBtn.classList.remove('block');
+            }
+
+            openModal('editProfileModal');
+        }
+
+        function saveProfileChanges() {
+            const currentName = localStorage.getItem('plannerUserName');
+            const newName = document.getElementById('editProfileName').value.trim();
+            const newPin = document.getElementById('editProfilePin').value.trim();
+
+            if (!newName) return alert("Name cannot be empty");
+
+            // 1. Rename if needed
+            if (newName !== currentName) {
+                const success = UserHandler.renameUser(currentName, newName);
+                if (!success) return alert("Name already taken!");
+                localStorage.setItem('plannerUserName', newName); // Update current session
+            }
+
+            // 2. Update PIN if provided
+            const finalName = newName; // Use new name
+            if (newPin) {
+                UserHandler.setPin(finalName, newPin);
+            }
+
+            closeModal('editProfileModal');
+            checkCurrentUser();
+            updateGreeting();
+            alert("Profile Updated Successfully!");
+        }
+
+        function removeCurrentPin() {
+            const name = localStorage.getItem('plannerUserName');
+            
+            // Security Check: Ask for current PIN
+            const currentPin = prompt("Enter your current PIN to remove the lock:");
+            
+            if (currentPin === null) return; // Cancelled
+
+            if (UserHandler.checkPin(name, currentPin)) {
+                UserHandler.removePin(name);
+                alert("Lock removed successfully!");
+                closeModal('editProfileModal'); 
+                checkCurrentUser(); // Updates header icon immediately
+            } else {
+                alert("Incorrect PIN! Lock was NOT removed.");
+            }
+        }
+
+        // --- SWITCH USER & DATA MIGRATION ---
+        function switchUser(targetName) {
+            const currentUser = localStorage.getItem('plannerUserName'); 
+
+            if ((!currentUser || currentUser === 'Guest') && targetName !== 'Guest') {
+                const guestTaskKey = 'Guest_tasks'; 
+                const guestDumpKey = 'Guest_dumps';
+                
+                const guestTasksRaw = localStorage.getItem(guestTaskKey);
+                const guestDumpsRaw = localStorage.getItem(guestDumpKey);
+                
+                const guestTasks = guestTasksRaw ? JSON.parse(guestTasksRaw) : [];
+                const guestDumps = guestDumpsRaw ? JSON.parse(guestDumpsRaw) : [];
+
+                if (guestTasks.length > 0 || guestDumps.length > 0) {
+                    if (confirm(`You have tasks in GUEST mode.\n\nDo you want to move them to user "${targetName}"?`)) {
+                        
+                        const targetTaskKey = DataHandler.getUserKeyForName(targetName, 'tasks');
+                        const targetDumpKey = DataHandler.getUserKeyForName(targetName, 'dumps');
+
+                        const existingTasks = JSON.parse(localStorage.getItem(targetTaskKey)) || [];
+                        const existingDumps = JSON.parse(localStorage.getItem(targetDumpKey)) || [];
+
+                        const finalTasks = existingTasks.concat(guestTasks);
+                        const finalDumps = existingDumps.concat(guestDumps);
+
+                        localStorage.setItem(targetTaskKey, JSON.stringify(finalTasks));
+                        localStorage.setItem(targetDumpKey, JSON.stringify(finalDumps));
+
+                        localStorage.removeItem(guestTaskKey);
+                        localStorage.removeItem(guestDumpKey);
+                    }
+                }
+            }
+
+            localStorage.setItem('plannerUserName', targetName);
+            document.getElementById('headerName').innerText = targetName;
+            
+            document.getElementById('newUserNameInput').value = '';
+            document.getElementById('newUserPin').value = '';
+            
+            renderTasks();
+            renderBrainDump();
+            closeModal('nameModal');
+            checkCurrentUser();
+            updateGreeting();
+        }
+
+        function deleteUserProfile(name) {
+            if(confirm(`Are you sure you want to delete user "${name}" and ALL their data?`)) {
+                UserHandler.removeUser(name);
+                
+                const taskKey = DataHandler.getUserKeyForName(name, 'tasks');
+                const dumpKey = DataHandler.getUserKeyForName(name, 'dumps');
+                localStorage.removeItem(taskKey);
+                localStorage.removeItem(dumpKey);
+
+                if(localStorage.getItem('plannerUserName') === name) {
+                    localStorage.removeItem('plannerUserName');
+                    document.getElementById('headerName').innerText = 'Guest';
+                    renderTasks(); 
+                    renderBrainDump();
+                }
+
+                renderUserList(); 
+                checkCurrentUser();
+            }
+        }
+
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
 
         // --- Dark Mode Logic ---
         function initDarkMode() {
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
-                updateIcon(true);
+                updateIcons(true);
             } else {
                 document.documentElement.classList.remove('dark');
-                updateIcon(false);
+                updateIcons(false);
             }
         }
 
@@ -212,22 +750,24 @@
             if (document.documentElement.classList.contains('dark')) {
                 document.documentElement.classList.remove('dark');
                 localStorage.theme = 'light';
-                updateIcon(false);
+                updateIcons(false);
             } else {
                 document.documentElement.classList.add('dark');
                 localStorage.theme = 'dark';
-                updateIcon(true);
+                updateIcons(true);
             }
         }
 
-        function updateIcon(isDark) {
-            const icon = document.getElementById('darkModeIcon');
+        function updateIcons(isDark) {
+            const deskIcon = document.getElementById('darkModeIconDesktop');
+            const mobIcon = document.getElementById('darkModeIconMobile');
+            
             if (isDark) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
+                if(deskIcon) { deskIcon.classList.remove('fa-moon'); deskIcon.classList.add('fa-sun'); }
+                if(mobIcon) { mobIcon.classList.remove('fa-moon'); mobIcon.classList.add('fa-sun'); }
             } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
+                if(deskIcon) { deskIcon.classList.remove('fa-sun'); deskIcon.classList.add('fa-moon'); }
+                if(mobIcon) { mobIcon.classList.remove('fa-sun'); mobIcon.classList.add('fa-moon'); }
             }
         }
 
@@ -235,46 +775,178 @@
         function updateGreeting() {
             const hour = new Date().getHours();
             const textElem = document.getElementById('greetingText');
-            let greeting = (hour < 12) ? "Good Morning" : (hour < 17) ? "Good Afternoon" : (hour < 21) ? "Good Evening" : "Good Night";
+            let greeting = "";
+
+            if (hour >= 4 && hour < 12) {
+                greeting = "🌅 Good Morning";
+            } else if (hour >= 12 && hour < 15) { // 12:00 PM - 2:59 PM (14:59)
+                greeting = "☀️ Good Noon";
+            } else if (hour >= 15 && hour < 18) { // 3:00 PM - 5:59 PM (17:59)
+                greeting = "🌤️ Good Afternoon";
+            } else if (hour >= 18 && hour < 20) { // 6:00 PM - 7:59 PM (19:59)
+                greeting = "🌇 Good Evening";
+            } else { // 8:00 PM - 3:59 AM
+                greeting = "🌙 Good Night";
+            }
+
             textElem.innerText = greeting;
         }
 
-        function loadUserName() {
-            const name = localStorage.getItem('plannerUserName');
-            if (!name) openModal('nameModal');
-            else document.getElementById('headerName').innerText = name;
-        }
+        // --- Import Function ---
+        function importData(mode) {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
 
-        function saveUserName() {
-            const name = document.getElementById('userNameInput').value.trim();
-            if (name) {
-                localStorage.setItem('plannerUserName', name);
-                document.getElementById('headerName').innerText = name;
-                closeModal('nameModal');
+            if (!file) {
+                alert("Please select a file first.");
+                return;
             }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    let importedTasks = [];
+                    let importedDumps = [];
+
+                    if (data.schedule && Array.isArray(data.schedule)) {
+                        importedTasks = data.schedule.map(t => t.name ? t : {id: t.i, name: t.n, start: t.s, end: t.e});
+                    }
+                    if (data.brainDump && Array.isArray(data.brainDump)) {
+                        importedDumps = data.brainDump.map(d => d.text ? d : {id: d.i, text: d.t, date: new Date(d.i).toLocaleDateString()});
+                    }
+                    
+                    if (mode === 'replace') {
+                        if (confirm("This will DELETE all current data for THIS USER. Are you sure?")) {
+                            DataHandler.saveTasks(importedTasks);
+                            DataHandler.saveDumps(importedDumps);
+                            alert("Data Replaced Successfully!");
+                        } else return; 
+
+                    } else if (mode === 'merge') {
+                        const currentTasks = DataHandler.getTasks();
+                        const currentDumps = DataHandler.getDumps();
+                        
+                        DataHandler.saveTasks(currentTasks.concat(importedTasks));
+                        DataHandler.saveDumps(currentDumps.concat(importedDumps));
+                        
+                        alert("Data Merged Successfully!");
+                    }
+
+                    renderTasks();
+                    renderBrainDump();
+                    closeModal('importModal');
+                    fileInput.value = '';
+                    
+                } catch (err) {
+                    alert("Invalid File! Please upload a valid JSON file exported from this app.");
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
         }
 
-        // --- NEW Delete Functions ---
+        // --- Export Function ---
+        function exportData(format) {
+            const tasks = DataHandler.getTasks(); 
+            const dumps = DataHandler.getDumps();
+            const userName = localStorage.getItem('plannerUserName') || "User";
+            const dateStr = new Date().toLocaleDateString();
+            
+            let content = "";
+            let filename = `${userName}_Planner_Data_${Date.now()}`;
+            let mimeType = "text/plain";
+
+            if (format === 'json') {
+                // Get Raw data for the CURRENT user
+                const taskKey = DataHandler.getUserKey('tasks');
+                const dumpKey = DataHandler.getUserKey('dumps');
+                const rawTasks = JSON.parse(localStorage.getItem(taskKey)) || [];
+                const rawDumps = JSON.parse(localStorage.getItem(dumpKey)) || [];
+
+                content = JSON.stringify({ user: userName, date: dateStr, schedule: rawTasks, brainDump: rawDumps }, null, 2);
+                filename += ".json";
+                mimeType = "application/json";
+            } else if (format === 'txt') {
+                content += `TASK PLANNER DATA - ${userName} (${dateStr})\n\n`;
+                content += `=== TASK SCHEDULE ===\n`;
+                tasks.forEach(t => content += `[${t.start} - ${t.end}] ${t.name}\n`);
+                content += `\n=== BRAIN DUMP / TASK LIST ===\n`;
+                dumps.forEach(d => content += `[${d.date}] ${d.text}\n`);
+                filename += ".txt";
+            } else if (format === 'md') {
+                content += `# Task Planner Data\n**User:** ${userName}\n**Date:** ${dateStr}\n\n`;
+                content += `## Task Schedule\n`;
+                if(tasks.length === 0) content += `*No schedule items.*\n`;
+                tasks.forEach(t => content += `- **${t.start} to ${t.end}**: ${t.name}\n`);
+                content += `\n## Brain Dump / Task List\n`;
+                if(dumps.length === 0) content += `*No items.*\n`;
+                dumps.forEach(d => content += `- *(${d.date})* ${d.text}\n`);
+                filename += ".md";
+            } else if (format === 'xml') {
+                content = `<?xml version="1.0" encoding="UTF-8"?>\n<planner>\n  <meta>\n    <user>${userName}</user>\n    <date>${dateStr}</date>\n  </meta>\n  <schedule>\n`;
+                tasks.forEach(t => {
+                    content += `    <task>\n      <name>${escapeXml(t.name)}</name>\n      <start>${t.start}</start>\n      <end>${t.end}</end>\n    </task>\n`;
+                });
+                content += `  </schedule>\n  <brainDump>\n`;
+                dumps.forEach(d => {
+                    content += `    <item>\n      <text>${escapeXml(d.text)}</text>\n      <date>${d.date}</date>\n    </item>\n`;
+                });
+                content += `  </brainDump>\n</planner>`;
+                filename += ".xml";
+                mimeType = "application/xml";
+            }
+
+            downloadFile(content, filename, mimeType);
+            closeModal('exportModal');
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        function downloadFile(content, fileName, mimeType) {
+            const a = document.createElement("a");
+            const file = new Blob([content], {type: mimeType});
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+        }
+
+        // --- Delete Functions ---
         function deleteTaskSchedule() {
-            if (confirm("Are you sure you want to delete ALL Task Schedules?")) {
-                localStorage.removeItem('myTasks');
+            if (confirm("Are you sure you want to delete Task Schedules for the CURRENT user?")) {
+                const key = DataHandler.getUserKey('tasks');
+                localStorage.removeItem(key);
                 renderTasks();
                 closeModal('deleteAllModal');
             }
         }
 
         function deleteBrainDumpList() {
-            if (confirm("Are you sure you want to delete ALL Task List items?")) {
-                localStorage.removeItem('myBrainDump');
+            if (confirm("Are you sure you want to delete Task List items for the CURRENT user?")) {
+                const key = DataHandler.getUserKey('dumps');
+                localStorage.removeItem(key);
                 renderBrainDump();
                 closeModal('deleteAllModal');
             }
         }
 
         function deleteAllData() {
-            if (confirm("Are you sure you want to delete ALL data?")) {
-                localStorage.removeItem('myTasks');
-                localStorage.removeItem('myBrainDump');
+            if (confirm("Are you sure you want to delete ALL data for the CURRENT user?")) {
+                const taskKey = DataHandler.getUserKey('tasks');
+                const dumpKey = DataHandler.getUserKey('dumps');
+                localStorage.removeItem(taskKey);
+                localStorage.removeItem(dumpKey);
                 renderTasks();
                 renderBrainDump();
                 closeModal('deleteAllModal');
@@ -300,18 +972,37 @@
         }
 
         // --- Task Schedule Functions ---
+        function populateTaskSelector() {
+            const selector = document.getElementById('taskSelector');
+            const dumps = DataHandler.getDumps();
+            selector.innerHTML = '<option value="">-- Choose from List --</option>';
+            dumps.forEach(d => {
+                let displayText = d.text.length > 40 ? d.text.substring(0, 40) + '...' : d.text;
+                selector.innerHTML += `<option value="${d.text}">${displayText}</option>`;
+            });
+        }
+
+        function fillTaskName() {
+            const select = document.getElementById('taskSelector');
+            const input = document.getElementById('taskName');
+            if(select.value) {
+                input.value = select.value;
+            }
+        }
+
         function openTaskModalForAdd() {
-            document.getElementById('taskModalTitle').innerText = "New Activity";
+            document.getElementById('taskModalTitle').innerText = "Set Task Schedule";
             document.getElementById('taskSubmitBtn').innerText = "Confirm Add";
             document.getElementById('editTaskId').value = "";
             document.getElementById('taskName').value = "";
             document.getElementById('startTime').value = "";
             document.getElementById('endTime').value = "";
+            populateTaskSelector();
             openModal('taskModal');
         }
 
         function openTaskModalForEdit(id) {
-            const tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+            const tasks = DataHandler.getTasks();
             const task = tasks.find(t => t.id === id);
             if (task) {
                 document.getElementById('taskModalTitle').innerText = "Edit Activity";
@@ -320,6 +1011,7 @@
                 document.getElementById('taskName').value = task.name;
                 document.getElementById('startTime').value = task.start;
                 document.getElementById('endTime').value = task.end;
+                populateTaskSelector();
                 openModal('taskModal');
             }
         }
@@ -332,7 +1024,7 @@
 
             if (!name || !start || !end) return alert("Fill all fields");
 
-            let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+            let tasks = DataHandler.getTasks();
 
             if (editId) {
                 tasks = tasks.map(t => t.id == editId ? { ...t, name, start, end } : t);
@@ -340,23 +1032,22 @@
                 tasks.push({ id: Date.now(), name, start, end });
             }
 
-            tasks.sort((a, b) => a.start.localeCompare(b.start));
-            localStorage.setItem('myTasks', JSON.stringify(tasks));
+            DataHandler.saveTasks(tasks);
             closeModal('taskModal');
             renderTasks();
         }
 
         function deleteTask(id) {
             if(confirm("Delete this task?")) {
-                let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+                let tasks = DataHandler.getTasks();
                 tasks = tasks.filter(t => t.id !== id);
-                localStorage.setItem('myTasks', JSON.stringify(tasks));
+                DataHandler.saveTasks(tasks);
                 renderTasks();
             }
         }
 
         function renderTasks() {
-            const tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+            const tasks = DataHandler.getTasks();
             const container = document.getElementById('taskList');
             const emptyState = document.getElementById('emptyState');
             container.innerHTML = '';
@@ -366,15 +1057,12 @@
             else {
                 emptyState.classList.add('hidden');
                 tasks.forEach(task => {
-                    // Calculate total and individual duration
                     let diff = (new Date(`2000-01-01T${task.end}`) - new Date(`2000-01-01T${task.start}`)) / 60000;
                     if (diff < 0) diff += 1440;
                     totalMins += diff;
-                    
                     let hrs = Math.floor(diff / 60);
                     let mns = diff % 60;
                     let durationStr = hrs > 0 ? `${hrs}h ${mns}m` : `${mns}m`;
-                    
                     const format = (t) => {
                         let [h, m] = t.split(':');
                         return `${h % 12 || 12}:${m} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -409,9 +1097,8 @@
         }
 
         function openBrainDumpModalForEdit(id) {
-            const dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
+            const dumps = DataHandler.getDumps();
             const dump = dumps.find(d => d.id === id);
-            
             if (dump) {
                 document.getElementById('brainDumpTitle').innerText = "Edit Note";
                 document.getElementById('brainDumpSubmitBtn').innerText = "Update Task";
@@ -424,34 +1111,28 @@
         function handleBrainDumpSubmit() {
             const text = document.getElementById('brainDumpInput').value.trim();
             const editId = document.getElementById('editBrainDumpId').value;
-
             if (!text) return alert("Please write something");
-
-            let dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
-
+            let dumps = DataHandler.getDumps();
             if (editId) {
                 dumps = dumps.map(d => d.id == editId ? { ...d, text: text } : d);
             } else {
-                dumps.push({ id: Date.now(), text: text, date: new Date().toLocaleDateString() });
+                dumps.push({ id: Date.now(), text: text });
             }
-            
-            localStorage.setItem('myBrainDump', JSON.stringify(dumps));
+            DataHandler.saveDumps(dumps);
             closeModal('brainDumpModal');
             renderBrainDump();
         }
 
         function renderBrainDump() {
-            const dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
+            const dumps = DataHandler.getDumps();
             const container = document.getElementById('brainDumpList');
             const emptyState = document.getElementById('brainDumpEmpty');
             container.innerHTML = '';
-
             if (dumps.length === 0) emptyState.classList.remove('hidden');
             else {
                 emptyState.classList.add('hidden');
-                dumps.reverse().forEach(dump => { 
+                dumps.forEach(dump => { 
                     const formattedText = dump.text.replace(/\n/g, '<br>');
-                    
                     container.innerHTML += `
                         <div class="p-4 rounded-2xl shadow-sm mb-3 bg-yellow-50 border border-yellow-100 dark:bg-yellow-900/20 dark:border-yellow-700/30 relative group transition-colors">
                             <p class="text-[12.5] text-gray-800 dark:text-gray-200 font-medium leading-relaxed">${formattedText}</p>
@@ -473,14 +1154,13 @@
 
         function deleteBrainDump(id) {
             if(confirm("Delete this task?")) {
-                let dumps = JSON.parse(localStorage.getItem('myBrainDump')) || [];
+                let dumps = DataHandler.getDumps();
                 dumps = dumps.filter(d => d.id !== id);
-                localStorage.setItem('myBrainDump', JSON.stringify(dumps));
+                DataHandler.saveDumps(dumps);
                 renderBrainDump();
             }
         }
 
-        // Modal Helpers
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
     </script>
